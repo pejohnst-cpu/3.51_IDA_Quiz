@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ET/IDA Strengths Quiz</title>
+  <style>
+    body { font-family: "Segoe UI", Arial, sans-serif; margin: 2rem auto; max-width: 900px; background: #f9fafb; color: #111827; }
+    h1, h2 { color: #0f172a; }
+    .question, .section { background: #fff; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    .highlight { font-weight: bold; color: #2563eb; }
+    .hidden { display: none; }
+    button { background: #2563eb; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; margin-top: 1rem; }
+    button:hover { background: #1d4ed8; }
+    label { display: block; margin-bottom: 0.5rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>ET/IDA Strengths Quiz</h1>
+
+  <!-- QUIZ AREA -->
+  <div id="quiz"></div>
+
+  <!-- REPORT AREA -->
+  <div id="report" class="hidden"></div>
+
+  <!-- DOWNLOAD BUTTON -->
+  <div class="section hidden" id="downloadSection">
+    <button id="downloadBtn">Download Your Report (PDF)</button>
+  </div>
+
+  <!-- jsPDF Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+  // -------------------------
+  // Quiz Questions & Scoring
+  // -------------------------
+const questions = [
+  {text:"A new potential threat emerges. What’s your first instinct?", answers:[
+    {text:"Gather more data and map scenarios",category:"theme",value:"Strategic Thinking"},
+    {text:"Drive team quickly to action",category:"style",value:"Achiever"},
+    {text:"Talk to partners to gauge perspective",category:"theme",value:"Relationship Building"},
+    {text:"Create a framework for assessment",category:"archetype",value:"Architect"}
+  ]},
+  {text:"During a cross-Department meeting, two offices disagree on priorities. You:", answers:[
+    {text:"Analyze perspectives objectively",category:"strength",value:"Problem-Solver"},
+    {text:"Push toward decision to maintain momentum",category:"style",value:"Achiever"},
+    {text:"Ensure all voices are heard",category:"strength",value:"Optimist"},
+    {text:"Suggest structured criteria to decide",category:"archetype",value:"Navigator"}
+  ]},
+  {text:"Which value resonates most with your work approach?", answers:[
+    {text:"Integrity and ethical responsibility",category:"archetype",value:"Guardian"},
+    {text:"Reliability and consistency",category:"style",value:"Achiever"},
+    {text:"Empathy and kindness",category:"theme",value:"Relationship Building"},
+    {text:"Innovation and foresight",category:"theme",value:"Strategic Thinking"}
+  ]},
+  {text:"You feel most energized when:", answers:[
+    {text:"Anticipating threats on the horizon",category:"theme",value:"Strategic Thinking"},
+    {text:"Driving a project to completion",category:"style",value:"Achiever"},
+    {text:"Bringing colleagues together",category:"theme",value:"Relationship Building"},
+    {text:"Designing systems and processes",category:"archetype",value:"Architect"}
+  ]},
+  {text:"Your preferred approach to decision-making is:", answers:[
+    {text:"Based on structured analysis",category:"style",value:"Analyst"},
+    {text:"Based on collaboration and consensus",category:"style",value:"Peacemaker"},
+    {text:"Based on long-term implications",category:"theme",value:"Strategic Thinking"},
+    {text:"Based on intuition and experience",category:"strength",value:"Networker"}
+  ]},
+  {text:"When prioritizing tasks, you:", answers:[
+    {text:"Focus on deadlines and execution",category:"style",value:"Achiever"},
+    {text:"Consider broader implications for others",category:"strength",value:"Optimist"},
+    {text:"Ensure tasks align with strategic goals",category:"theme",value:"Strategic Thinking"},
+    {text:"Create clear processes for team follow-through",category:"archetype",value:"Architect"}
+  ]},
+  {text:"In a team conflict, you:", answers:[
+    {text:"Step back and assess objectively",category:"strength",value:"Problem-Solver"},
+    {text:"Mediate to maintain harmony",category:"style",value:"Peacemaker"},
+    {text:"Encourage everyone’s perspective",category:"theme",value:"Relationship Building"},
+    {text:"Develop clear criteria to resolve the issue",category:"archetype",value:"Navigator"}
+  ]},
+  {text:"You measure success by:", answers:[
+    {text:"Impact on long-term strategic goals",category:"theme",value:"Strategic Thinking"},
+    {text:"Completion of high-quality work",category:"style",value:"Achiever"},
+    {text:"Strength of partnerships and collaboration",category:"theme",value:"Relationship Building"},
+    {text:"Effectiveness of systems and processes",category:"archetype",value:"Architect"}
+  ]},
+  {text:"When receiving new information, you:", answers:[
+    {text:"Analyze it thoroughly before acting",category:"style",value:"Analyst"},
+    {text:"Share and discuss with team for alignment",category:"strength",value:"Networker"},
+    {text:"Adapt quickly and decide a course",category:"style",value:"Achiever"},
+    {text:"Consider implications for strategic planning",category:"theme",value:"Strategic Thinking"}
+  ]},
+  {text:"Your colleagues often describe you as:", answers:[
+    {text:"Reliable and consistent",category:"style",value:"Achiever"},
+    {text:"Empathetic and supportive",category:"theme",value:"Relationship Building"},
+    {text:"Innovative and forward-thinking",category:"theme",value:"Strategic Thinking"},
+    {text:"Organized and systematic",category:"archetype",value:"Architect"}
+  ]},
+  {text:"When approaching a complex problem, you:", answers:[
+    {text:"Break it into manageable steps",category:"archetype",value:"Architect"},
+    {text:"Gather multiple perspectives",category:"strength",value:"Networker"},
+    {text:"Focus on solution efficiency",category:"style",value:"Achiever"},
+    {text:"Consider long-term impact and strategy",category:"theme",value:"Strategic Thinking"}
+  ]},
+  {text:"You handle stress best by:", answers:[
+    {text:"Planning carefully and creating structure",category:"archetype",value:"Architect"},
+    {text:"Talking it through with others",category:"strength",value:"Optimist"},
+    {text:"Keeping focus on tasks and deadlines",category:"style",value:"Achiever"},
+    {text:"Stepping back to analyze the bigger picture",category:"theme",value:"Strategic Thinking"}
+  ]},
+  {text:"You feel most fulfilled when your work:", answers:[
+    {text:"Supports team cohesion and trust",category:"theme",value:"Relationship Building"},
+    {text:"Has a measurable impact on goals",category:"style",value:"Achiever"},
+    {text:"Helps the organization anticipate future challenges",category:"theme",value:"Strategic Thinking"},
+    {text:"Creates lasting processes for efficiency",category:"archetype",value:"Architect"}
+  ]},
+  {text:"Your approach to collaboration is:", answers:[
+    {text:"Listen and incorporate others’ input",category:"style",value:"Peacemaker"},
+    {text:"Coordinate tasks to ensure reliability",category:"style",value:"Achiever"},
+    {text:"Bridge networks and foster connections",category:"strength",value:"Networker"},
+    {text:"Provide structure and clarity to group decisions",category:"archetype",value:"Navigator"}
+  ]},
+  {text:"In planning ET/IDA assessments, you:", answers:[
+    {text:"Design structured evaluation frameworks",category:"archetype",value:"Architect"},
+    {text:"Ensure all stakeholders are informed",category:"theme",value:"Relationship Building"},
+    {text:"Identify strategic implications and priorities",category:"theme",value:"Strategic Thinking"},
+    {text:"Drive tasks to completion efficiently",category:"style",value:"Achiever"}
+  ]},
+  {text:"You respond best to feedback that is:", answers:[
+    {text:"Specific and actionable",category:"strength",value:"Problem-Solver"},
+    {text:"Collaborative and supportive",category:"strength",value:"Optimist"},
+    {text:"Aligned with goals and strategy",category:"theme",value:"Strategic Thinking"},
+    {text:"Focused on process improvement",category:"archetype",value:"Architect"}
+  ]},
+  {text:"When deadlines overlap, you:", answers:[
+    {text:"Organize and prioritize tasks carefully",category:"archetype",value:"Organizer"},
+    {text:"Rally the team to meet all requirements",category:"style",value:"Achiever"},
+    {text:"Seek input on priorities from stakeholders",category:"strength",value:"Networker"},
+    {text:"Assess which task has greatest strategic impact",category:"theme",value:"Strategic Thinking"}
+  ]},
+  {text:"You’re most motivated by:", answers:[
+    {text:"Making meaningful impact on the mission",category:"theme",value:"Strategic Thinking"},
+    {text:"Achieving tangible results",category:"style",value:"Achiever"},
+    {text:"Helping the team and colleagues thrive",category:"theme",value:"Relationship Building"},
+    {text:"Designing systems that last",category:"archetype",value:"Architect"}
+  ]},
+  {text:"When mentoring others, you:", answers:[
+    {text:"Encourage structured problem-solving",category:"archetype",value:"Architect"},
+    {text:"Provide encouragement and positive reinforcement",category:"strength",value:"Optimist"},
+    {text:"Focus on long-term skill development",category:"theme",value:"Strategic Thinking"},
+    {text:"Model reliability and work ethic",category:"style",value:"Achiever"}
+  ]},
+  {text:"You prefer meetings that are:", answers:[
+    {text:"Efficient and outcome-oriented",category:"style",value:"Achiever"},
+    {text:"Inclusive and supportive",category:"theme",value:"Relationship Building"},
+    {text:"Strategically focused",category:"theme",value:"Strategic Thinking"},
+    {text:"Well-structured with clear processes",category:"archetype",value:"Architect"}
+  ]},
+  {text:"Your decision-making style is:", answers:[
+    {text:"Analytical and data-driven",category:"style",value:"Analyst"},
+    {text:"Consensus-seeking and diplomatic",category:"style",value:"Peacemaker"},
+    {text:"Intuitive and strategic",category:"strength",value:"Networker"},
+    {text:"Systematic and organized",category:"archetype",value:"Architect"}
+  ]},
+  {text:"You contribute most to a team by:", answers:[
+    {text:"Connecting people and resources",category:"strength",value:"Networker"},
+    {text:"Providing strategic foresight",category:"theme",value:"Strategic Thinking"},
+    {text:"Driving execution and results",category:"style",value:"Achiever"},
+    {text:"Creating order and processes",category:"archetype",value:"Architect"}
+  ]},
+  {text:"You handle ambiguity by:", answers:[
+    {text:"Analyzing and developing frameworks",category:"archetype",value:"Architect"},
+    {text:"Focusing on achievable actions",category:"style",value:"Achiever"},
+    {text:"Maintaining positive relationships",category:"strength",value:"Optimist"},
+    {text:"Looking at the bigger strategic picture",category:"theme",value:"Strategic Thinking"}
+  ]},
+  {text:"You feel successful when:", answers:[
+    {text:"Your work helps the team succeed",category:"theme",value:"Relationship Building"},
+    {text:"Projects are delivered on time and high quality",category:"style",value:"Achiever"},
+    {text:"Processes and frameworks improve efficiency",category:"archetype",value:"Architect"},
+    {text:"You anticipate and prevent problems",category:"theme",value:"Strategic Thinking"}
+  ]},
+  {text:"You thrive in an environment that is:", answers:[
+    {text:"Collaborative and supportive",category:"theme",value:"Relationship Building"},
+    {text:"Structured and predictable",category:"archetype",value:"Architect"},
+    {text:"Challenging and fast-paced",category:"style",value:"Achiever"},
+    {text:"Strategically oriented with vision",category:"theme",value:"Strategic Thinking"}
+  ]},
+  {text:"You often notice:", answers:[
+    {text:"Patterns and trends ahead of time",category:"theme",value:"Strategic Thinking"},
+    {text:"Opportunities to help others succeed",category:"strength",value:"Optimist"},
+    {text:"Processes that can be improved",category:"archetype",value:"Architect"},
+    {text:"Tasks that need immediate action",category:"style",value:"Achiever"}
+  ]},
+  {text:"You resolve conflict by:", answers:[
+    {text:"Creating clear decision frameworks",category:"archetype",value:"Navigator"},
+    {text:"Encouraging dialogue and empathy",category:"strength",value:"Optimist"},
+    {text:"Driving to action quickly",category:"style",value:"Achiever"},
+    {text:"Considering long-term strategic consequences",category:"theme",value:"Strategic Thinking"}
+  ]},
+  {text:"You help ET/IDA stand out by:", answers:[
+    {text:"Ensuring assessments are thorough and rigorous",category:"archetype",value:"Architect"},
+    {text:"Building and nurturing relationships",category:"theme",value:"Relationship Building"},
+    {text:"Providing insight into emerging threats",category:"theme",value:"Strategic Thinking"},
+    {text:"Delivering results and milestones consistently",category:"style",value:"Achiever"}
+  ]},
+  {text:"You feel most confident when:", answers:[
+    {text:"You have clarity on strategy and goals",category:"theme",value:"Strategic Thinking"},
+    {text:"Processes are organized and efficient",category:"archetype",value:"Architect"},
+    {text:"Colleagues respond positively to your support",category:"strength",value:"Optimist"},
+    {text:"Tasks are completed on time and to standard",category:"style",value:"Achiever"}
+  ]},
+  {text:"Your leadership style is:", answers:[
+    {text:"Guiding and structured",category:"archetype",value:"Navigator"},
+    {text:"Supportive and empathetic",category:"strength",value:"Optimist"},
+    {text:"Strategic and forward-looking",category:"theme",value:"Strategic Thinking"},
+    {text:"Action-oriented and results-driven",category:"style",value:"Achiever"}
+  ]},
+  {text:"You approach emerging threats by:", answers:[
+    {text:"Analyzing patterns and creating forecasts",category:"theme",value:"Strategic Thinking"},
+    {text:"Mobilizing the team for immediate response",category:"style",value:"Achiever"},
+    {text:"Consulting partners and stakeholders",category:"theme",value:"Relationship Building"},
+    {text:"Building structured mitigation frameworks",category:"archetype",value:"Architect"}
+  ]},
+  {text:"You build trust by:", answers:[
+    {text:"Being reliable and ethical",category:"style",value:"Achiever"},
+    {text:"Listening and empathizing",category:"theme",value:"Relationship Building"},
+    {text:"Delivering thoughtful analysis",category:"archetype",value:"Analyst"},
+    {text:"Maintaining transparency and integrity",category:"archetype",value:"Guardian"}
+  ]},
+  {text:"You contribute most to ET/IDA’s mission by:", answers:[
+    {text:"Anticipating and assessing threats strategically",category:"theme",value:"Strategic Thinking"},
+    {text:"Building and strengthening partnerships",category:"theme",value:"Relationship Building"},
+    {text:"Creating clear processes and tools",category:"archetype",value:"Architect"},
+    {text:"Executing key projects reliably",category:"style",value:"Achiever"}
+  ]}
+];
+
+
+  let currentQuestion = 0;
+  let scores = {theme:{}, style:{}, strength:{}, archetype:{}};
+
+  function recordAnswer(category, value){
+    if(!scores[category][value]) scores[category][value]=0;
+    scores[category][value]++;
+  }
+
+  function showQuestion(index){
+    if(index >= questions.length){
+      finishQuiz();
+      return;
+    }
+    const q = questions[index];
+    let html = `<div class="question"><h2>Question ${index+1}/${questions.length}</h2><p>${q.text}</p>`;
+    q.answers.forEach((a,i)=>{
+      html += `<label><input type="radio" name="q${index}" value="${i}"> ${a.text}</label>`;
+    });
+    html += `<button onclick="nextQuestion()">Next</button></div>`;
+    document.getElementById("quiz").innerHTML = html;
+  }
+
+  function nextQuestion(){
+    const q = questions[currentQuestion];
+    const selected = document.querySelector(`input[name="q${currentQuestion}"]:checked`);
+    if(!selected){ alert("Please select an answer."); return; }
+    const ans = q.answers[selected.value];
+    recordAnswer(ans.category, ans.value);
+    currentQuestion++;
+    showQuestion(currentQuestion);
+  }
+
+  // -------------------------
+  // Report Descriptions
+  // -------------------------
+  const themes = {
+    "Strategic Thinking": "You bring foresight, scanning for patterns and anticipating threats before they materialize. This ensures ET/IDA maintains a forward-looking posture, aligned with Department priorities. You embody <span class='highlight'>clarity and integrity</span>.",
+    "Execution": "You ensure reliability and follow-through, building structured processes that give ET/IDA credibility. You embody <span class='highlight'>reliability and ethical behavior</span>.",
+    "Relationship Building": "You embody empathy, humility, and kindness, strengthening ET/IDA’s partnerships. Your work highlights <span class='highlight'>trust and teamwork</span>.",
+    "Influence": "You communicate clearly and positively, ensuring ET/IDA’s work gains traction. You bring <span class='highlight'>clarity, kindness, and impact</span>."
+  };
+  const styles = {
+    "Achiever": "You provide momentum and reliability, ensuring deadlines are met. You embody <span class='highlight'>reliability and trust</span>.",
+    "Peacemaker": "You strengthen trust and manage conflict constructively. You embody <span class='highlight'>empathy and kindness</span>.",
+    "Visionary": "You inspire colleagues with future-oriented perspectives. You embody <span class='highlight'>humility and foresight</span>.",
+    "Analyst": "You add rigor and depth to assessments. You embody <span class='highlight'>integrity and reliability</span>."
+  };
+  const strengths = {
+    "Problem-Solver": "You adapt under uncertainty, finding creative solutions. You embody <span class='highlight'>resilience and reliability</span>.",
+    "Optimist": "You bring positivity and resilience, keeping morale high. You embody <span class='highlight'>kindness and empathy</span>.",
+    "Networker": "You expand ET/IDA’s reach by building trusted relationships. You embody <span class='highlight'>teamwork and trust</span>.",
+    "Organizer": "You create tools and frameworks that help prioritize threats. You embody <span class='highlight'>clarity and integrity</span>."
+  };
+  const archetypes = {
+    "Architect": "You build systems and processes that make ET/IDA’s work repeatable. You embody <span class='highlight'>ethical behavior and reliability</span>.",
+    "Connector": "You bridge communities and ensure ET/IDA is a trusted partner. You embody <span class='highlight'>teamwork and empathy</span>.",
+    "Navigator": "You chart pathways through uncertainty. You embody <span class='highlight'>integrity and foresight</span>.",
+    "Guardian": "You safeguard integrity, ethics, and reliability. You embody <span class='highlight'>trust and accountability</span>."
+  };
+
+  function getTopResult(category){
+    const entries = Object.entries(scores[category]);
+    if(entries.length===0) return null;
+    entries.sort((a,b)=>b[1]-a[1]);
+    return entries[0][0];
+  }
+
+function buildReport(userResult){
+  // Example development suggestions based on top results
+  const devNotes = {
+    "Strategic Thinking": "Continue to refine your ability to anticipate emerging threats by integrating data from diverse interagency and private sector sources. Consider mentoring colleagues to strengthen team-wide strategic foresight.",
+    "Relationship Building": "Focus on deepening cross-Department and interagency connections. Your natural empathy can be leveraged to mediate differing perspectives and enhance collaboration.",
+    "Execution": "Use your reliability and focus on completing tasks to set an example for project follow-through. Explore ways to balance efficiency with innovation.",
+    "Influence": "Leverage your communication strengths to advocate for ET/IDA priorities. Consider coaching others on clear, persuasive communication in complex environments.",
+    "Achiever": "Ensure that your drive for results aligns with broader team strategy and does not overwhelm collaborators. Pair your energy with active listening to maximize team effectiveness.",
+    "Peacemaker": "Use your conflict management skills to help ET/IDA navigate sensitive interagency dynamics, while also ensuring timely decisions are made.",
+    "Visionary": "Balance your forward-looking ideas with actionable steps that can be executed by the team. Translate big-picture vision into measurable goals.",
+    "Analyst": "Continue to provide rigorous, evidence-based analysis while sharing insights in an accessible way for decision-makers.",
+    "Problem-Solver": "Apply your adaptability to address unpredictable threats, while also documenting solutions to benefit the broader team.",
+    "Optimist": "Leverage positivity to maintain morale during high-pressure assessments, but ensure critical analysis is not overlooked.",
+    "Networker": "Expand your internal and external networks strategically, connecting the team to key partners and intelligence sources.",
+    "Organizer": "Continue building effective processes and workflows, and train others to maintain high standards and consistency.",
+    "Architect": "Refine and document frameworks that guide ET/IDA’s threat assessments, ensuring scalability and clarity.",
+    "Connector": "Bridge gaps between teams and organizations to enhance collective situational awareness.",
+    "Navigator": "Use your structured thinking to guide ET/IDA through uncertainty and help prioritize emerging threats.",
+    "Guardian": "Maintain integrity and ethical standards across assessments, ensuring trust in ET/IDA’s outputs."
+  };
+
+  return `
+    <div class="section"><h2>Theme: ${userResult.theme}</h2><p>${themes[userResult.theme]}</p></div>
+    <div class="section"><h2>Workplace Style: ${userResult.style}</h2><p>${styles[userResult.style]}</p></div>
+    <div class="section"><h2>Signature Strength: ${userResult.strength}</h2><p>${strengths[userResult.strength]}</p></div>
+    <div class="section"><h2>Archetype: ${userResult.archetype}</h2><p>${archetypes[userResult.archetype]}</p></div>
+<div class="section"><h2>Value Add</h2>
+  <p>Based on your top results, you bring a unique combination of capabilities to ET/IDA:</p>
+  <ul>
+    <li><strong>Theme (<span class='highlight'>${userResult.theme}</span>):</strong> You provide foresight and perspective that help the team anticipate emerging threats and ensure alignment with Department priorities.</li>
+    <li><strong>Workplace Style (<span class='highlight'>${userResult.style}</span>):</strong> Your approach drives reliability, consistency, and action, keeping ET/IDA initiatives on track and outcomes measurable.</li>
+    <li><strong>Signature Strength (<span class='highlight'>${userResult.strength}</span>):</strong> You contribute a unique talent—whether connecting people, solving complex problems, or maintaining optimism—that strengthens both internal and external collaboration.</li>
+    <li><strong>Archetype (<span class='highlight'>${userResult.archetype}</span>):</strong> You provide structure, guidance, and ethical oversight, ensuring ET/IDA’s processes are rigorous, transparent, and sustainable.</li>
+  </ul>
+  <p>Combined, these strengths allow you to:</p>
+  <ul>
+    <li>Support ET/IDA’s mission to identify and assess threats with strategic insight.</li>
+    <li>Enhance collaboration across Department, interagency, private sector, and academic partners.</li>
+    <li>Ensure ET/IDA’s outputs are aligned with Secretary priorities and administration objectives.</li>
+    <li>Build trust, reliability, and credibility within the team and with external stakeholders.</li>
+    <li>Contribute to a culture that values clear communication, empathy, ethical behavior, and integrity.</li>
+  </ul>
+  <p>In short, your unique profile helps ET/IDA not only detect and assess emerging threats effectively but also strengthens the team’s overall capacity to act decisively and responsibly, maximizing value to the Department and the American people.</p>
+</div>
+
+    <div class="section"><h2>Development Note</h2>
+      <p>${devNotes[userResult.theme] || ""} ${devNotes[userResult.style] || ""} ${devNotes[userResult.strength] || ""} ${devNotes[userResult.archetype] || ""}</p>
+    </div>
+  `;
+}
+
+  function finishQuiz(){
+    const userResult = {
+      theme: getTopResult("theme"),
+      style: getTopResult("style"),
+      strength: getTopResult("strength"),
+      archetype: getTopResult("archetype")
+    };
+    document.getElementById("quiz").classList.add("hidden");
+    document.getElementById("report").classList.remove("hidden");
+    document.getElementById("report").innerHTML = buildReport(userResult);
+
+    // Show download button
+    document.getElementById("downloadSection").classList.remove("hidden");
+  }
+
+  // -------------------------
+  // PDF Download
+  // -------------------------
+  document.getElementById("downloadBtn").addEventListener("click", function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const reportElement = document.getElementById("report");
+
+    doc.html(reportElement, {
+      callback: function(doc) { doc.save("ETIDA_Strengths_Report.pdf"); },
+      x: 10,
+      y: 10,
+      width: 180,
+      windowWidth: reportElement.scrollWidth
+    });
+  });
+
+  // Initialize first question
+  showQuestion(currentQuestion);
+  </script>
+</body>
+</html>
