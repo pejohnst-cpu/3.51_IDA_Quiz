@@ -373,22 +373,23 @@ function buildReport(userResult){
   // -------------------------
   // PDF Download
   // -------------------------
-  document.getElementById("downloadBtn").addEventListener("click", function() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const reportElement = document.getElementById("report");
+//  document.getElementById("downloadBtn").addEventListener("click", function() {
+//    const { jsPDF } = window.jspdf;
+//    const doc = new jsPDF();
+//    const reportElement = document.getElementById("report");
 
-    doc.html(reportElement, {
-      callback: function(doc) { doc.save("ETIDA_Strengths_Report.pdf"); },
-      x: 10,
-      y: 10,
-      width: 180,
-      windowWidth: reportElement.scrollWidth
-    });
-  });
+//    doc.html(reportElement, {
+//      callback: function(doc) { doc.save("ETIDA_Strengths_Report.pdf"); },
+//      x: 10,
+//      y: 10,
+//      width: 180,
+//      windowWidth: reportElement.scrollWidth
+//    });
+//  });
 
   // Initialize first question
   showQuestion(currentQuestion);
   </script>
 </body>
 </html>
+
